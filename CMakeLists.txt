@@ -25,5 +25,24 @@ set(GLAD_API "gl=3.3" CACHE STRING "API type/version pairs, like \"gl=3.2,gles=\
 set(GLAD_GENERATOR "c" CACHE STRING "Language to generate the binding for")
 FetchContent_MakeAvailable( glad )
 
+include_directories(include)
 add_executable(game src/main.cpp)
 target_link_libraries(game glfw glad)
+
+# file(GLOB shaders ${CMAKE_SOURCE_DIR}/src/glsl/*)
+
+# foreach(shader ${shaders})
+# # file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glsl/ INPUT ${shader})
+# configure_file(${shader} ${CMAKE_CURRENT_BINARY_DIR}/glsl/ COPYONLY)
+# endforeach(shader)
+
+add_custom_target(copy_glsl
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/glsl/ ${CMAKE_CURRENT_BINARY_DIR}/glsl/
+)
+add_dependencies(game copy_glsl)
+
+# add_custom_command(TARGET game POST_BUILD
+#   COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+#   ${CMAKE_SOURCE_DIR}/src/glsl/
+#   $<TARGET_FILE_DIR:game>/glsl/
+#   )
