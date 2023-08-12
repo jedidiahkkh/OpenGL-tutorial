@@ -29,6 +29,8 @@ include_directories(include)
 add_executable(game src/main.cpp)
 target_link_libraries(game glfw glad)
 
+# Copying the shaders into the build folder
+
 # file(GLOB shaders ${CMAKE_SOURCE_DIR}/src/glsl/*)
 
 # foreach(shader ${shaders})
@@ -46,3 +48,12 @@ add_dependencies(game copy_glsl)
 #   ${CMAKE_SOURCE_DIR}/src/glsl/
 #   $<TARGET_FILE_DIR:game>/glsl/
 #   )
+
+# Copy the assets folder into the build directory
+set(link_src ${CMAKE_SOURCE_DIR}/assets)
+set(link_dst ${CMAKE_CURRENT_BINARY_DIR}/assets)
+
+add_custom_target(copy_assets
+  COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${link_src} ${link_dst}
+)
+add_dependencies(game copy_assets)
