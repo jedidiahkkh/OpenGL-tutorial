@@ -1,5 +1,5 @@
 #version 330 core
-in vec3 ourColor;
+// in vec3 ourColor;
 in vec2 texCoord;
 out vec4 FragColor;
 
@@ -9,5 +9,5 @@ uniform float mixAmt;
 
 void main()
 {
-  FragColor = mix(texture(texture1, texCoord), texture(texture2, texCoord), mixAmt) * vec4(ourColor, 1.0);
+  FragColor = mix(texture(texture1, texCoord), texture(texture2, texCoord), mixAmt);
 }
