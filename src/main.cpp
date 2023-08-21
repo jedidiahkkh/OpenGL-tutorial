@@ -257,6 +257,7 @@ int main() {
 
 
     glm::vec3 lightColor = glm::vec3(1.0f);
+    lightPos = glm::vec3(2.0f * cos(glfwGetTime() * glm::radians(20.0f)), 1.0f, 2.0f * sin(glfwGetTime() * glm::radians(20.0f)));
 
     for (unsigned int i = 0; i < 10; i++) {
       shaderProgram.use();
@@ -287,24 +288,27 @@ int main() {
       shaderProgram.setVec3("light.ambient", lightColor * glm::vec3(0.2f));
       shaderProgram.setVec3("light.diffuse", lightColor * glm::vec3(0.5f));
       shaderProgram.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-      shaderProgram.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+      shaderProgram.setVec3("light.position", lightPos);
+      // shaderProgram.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+      shaderProgram.setFloat("light.constant", 1.0f);
+      shaderProgram.setFloat("light.linear", 0.14f);
+      shaderProgram.setFloat("light.quadratic", 0.07f);
 
       glBindVertexArray(VAO);
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
-    // lightShader.use();
-    // lightShader.setMat4("view", view);
-    // lightShader.setMat4("projection", projection);
-    // lightPos = glm::vec3(2.0f * cos(glfwGetTime() * glm::radians(20.0f)), 1.0f, 2.0f * sin(glfwGetTime() * glm::radians(20.0f)));
-    // glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::translate(model, lightPos);
-    // model = glm::scale(model, glm::vec3(0.2f));
-    // lightShader.setMat4("model", model);
+    lightShader.use();
+    lightShader.setMat4("view", view);
+    lightShader.setMat4("projection", projection);
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, lightPos);
+    model = glm::scale(model, glm::vec3(0.2f));
+    lightShader.setMat4("model", model);
 
-    // lightShader.setVec3("lightColor", lightColor);
-    // glBindVertexArray(lightVAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
+    lightShader.setVec3("lightColor", lightColor);
+    glBindVertexArray(lightVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
