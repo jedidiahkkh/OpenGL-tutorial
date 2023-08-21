@@ -235,11 +235,6 @@ int main() {
     // shaderProgram.setFloat("mixAmt", mixAmt);
     shaderProgram.use();
 
-    shaderProgram.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-    shaderProgram.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-    shaderProgram.setVec3("lightPos", lightPos);
-    // shaderProgram.setVec3("viewPos", glm::vec3(camera->position));
-
     // set up matrices
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = camera->getViewMatrix();
@@ -249,6 +244,21 @@ int main() {
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     shaderProgram.setMat4("model", model);
     shaderProgram.setMat3("normalTrans", glm::transpose(glm::inverse(view * model)));
+
+    shaderProgram.setVec3("material.ambient", 0.329412f, 0.223529f, 0.027451f);
+    shaderProgram.setVec3("material.diffuse", 0.780392f, 0.568627f, 0.113725f);
+    shaderProgram.setVec3("material.specular", 0.992157f, 0.941176f, 0.807843f);
+    shaderProgram.setFloat("material.shininess", 0.21794872f * 128);
+
+    glm::vec3 lightColor = glm::vec3(1.0f);
+    // lightColor.x = sin(glfwGetTime() * 2.4f);
+    // lightColor.y = sin(glfwGetTime() * 0.7f);
+    // lightColor.z = sin(glfwGetTime() * 1.3f);
+
+    shaderProgram.setVec3("light.ambient", lightColor * glm::vec3(1.0f));
+    shaderProgram.setVec3("light.diffuse", lightColor * glm::vec3(1.0f));
+    shaderProgram.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    shaderProgram.setVec3("light.position", lightPos);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -270,6 +280,8 @@ int main() {
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.2f));
     lightShader.setMat4("model", model);
+
+    lightShader.setVec3("lightColor", lightColor);
     glBindVertexArray(lightVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
