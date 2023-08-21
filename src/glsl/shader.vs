@@ -10,7 +10,7 @@ in vec4 gl_Position;
 out vec2 texCoord;
 out vec3 normal;
 out vec3 FragPos;
-out vec3 LightPos;
+out vec3 LightDir;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -18,7 +18,7 @@ uniform mat4 projection;
 uniform mat3 normalTrans;
 
 struct Light {
-  vec3 position;
+  vec3 direction;
 
   vec3 ambient;
   vec3 diffuse;
@@ -31,7 +31,7 @@ void main()
 {
   gl_Position = projection * view * model * vec4(aPos, 1.0);
   FragPos = vec3(view * model * vec4(aPos, 1.0));
-  LightPos = vec3(view * vec4(light.position, 1.0));
+  LightDir = vec3(view * vec4(light.direction, 0.0f));
   normal = normalTrans * aNormal;
   // ourColor = aColor;
   texCoord = aTex;

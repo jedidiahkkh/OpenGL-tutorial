@@ -81,18 +81,18 @@ float cube[] = {
   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 };
 
-// glm::vec3 cubePositions[] = {
-//     glm::vec3(0.0f,  0.0f,  0.0f),
-//     glm::vec3(2.0f,  5.0f, -15.0f),
-//     glm::vec3(-1.5f, -2.2f, -2.5f),
-//     glm::vec3(-3.8f, -2.0f, -12.3f),
-//     glm::vec3(2.4f, -0.4f, -3.5f),
-//     glm::vec3(-1.7f,  3.0f, -7.5f),
-//     glm::vec3(1.3f, -2.0f, -2.5f),
-//     glm::vec3(1.5f,  2.0f, -2.5f),
-//     glm::vec3(1.5f,  0.2f, -1.5f),
-//     glm::vec3(-1.3f,  1.0f, -1.5f)
-// };
+glm::vec3 cubePositions[] = {
+    glm::vec3(0.0f,  0.0f,  0.0f),
+    glm::vec3(2.0f,  5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3(2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f,  3.0f, -7.5f),
+    glm::vec3(1.3f, -2.0f, -2.5f),
+    glm::vec3(1.5f,  2.0f, -2.5f),
+    glm::vec3(1.5f,  0.2f, -1.5f),
+    glm::vec3(-1.3f,  1.0f, -1.5f)
+};
 
 // float mixAmt = 0.2f;
 
@@ -251,57 +251,60 @@ int main() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, texture3);
     // shaderProgram.setFloat("mixAmt", mixAmt);
-    shaderProgram.use();
 
-    // set up matrices
-    glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = camera->getViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera->zoom), (float(gwidth)) / (float(gheight)), 0.1f, 100.0f);
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-    shaderProgram.setMat4("model", model);
-    shaderProgram.setMat3("normalTrans", glm::transpose(glm::inverse(view * model)));
-
-    shaderProgram.setInt("material.diffuse", 0);
-    shaderProgram.setInt("material.specular", 1);
-    shaderProgram.setInt("material.emission", 2);
-    shaderProgram.setFloat("material.shininess", 0.21794872f * 128);
 
     glm::vec3 lightColor = glm::vec3(1.0f);
-    // lightColor.x = sin(glfwGetTime() * 2.4f);
-    // lightColor.y = sin(glfwGetTime() * 0.7f);
-    // lightColor.z = sin(glfwGetTime() * 1.3f);
 
-    shaderProgram.setVec3("light.ambient", lightColor * glm::vec3(0.2f));
-    shaderProgram.setVec3("light.diffuse", lightColor * glm::vec3(0.5f));
-    shaderProgram.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-    shaderProgram.setVec3("light.position", lightPos);
+    for (unsigned int i = 0; i < 10; i++) {
+      shaderProgram.use();
 
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    // for (unsigned int i = 0; i < 10; i++) {
-    //   glm::mat4 model = glm::mat4(1.0f);
-    //   model = glm::translate(model, cubePositions[i]);
-    //   float angle = 20.0f * i;
-    //   model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-    //   model = glm::rotate(model, (float)glfwGetTime() * glm::radians(100.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-    //   glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    //   glDrawArrays(GL_TRIANGLES, 0, 36);
-    // }
+      // set up matrices
+      glm::mat4 model = glm::mat4(1.0f);
+      model = glm::translate(model, cubePositions[i]);
+      float angle = 20.0f * i;
+      model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+      model = glm::rotate(model, (float)glfwGetTime() * glm::radians(100.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
-    lightShader.use();
-    lightShader.setMat4("view", view);
-    lightShader.setMat4("projection", projection);
-    lightPos = glm::vec3(2.0f * cos(glfwGetTime() * glm::radians(20.0f)), 1.0f, 2.0f * sin(glfwGetTime() * glm::radians(20.0f)));
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, lightPos);
-    model = glm::scale(model, glm::vec3(0.2f));
-    lightShader.setMat4("model", model);
+      // glm::mat4 model = glm::mat4(1.0f);
 
-    lightShader.setVec3("lightColor", lightColor);
-    glBindVertexArray(lightVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+      glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+      glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+      shaderProgram.setMat4("model", model);
+      shaderProgram.setMat3("normalTrans", glm::transpose(glm::inverse(view * model)));
+
+      shaderProgram.setInt("material.diffuse", 0);
+      shaderProgram.setInt("material.specular", 1);
+      // shaderProgram.setInt("material.emission", 2);
+      shaderProgram.setFloat("material.shininess", 0.21794872f * 128);
+
+      // lightColor.x = sin(glfwGetTime() * 2.4f);
+      // lightColor.y = sin(glfwGetTime() * 0.7f);
+      // lightColor.z = sin(glfwGetTime() * 1.3f);
+
+      shaderProgram.setVec3("light.ambient", lightColor * glm::vec3(0.2f));
+      shaderProgram.setVec3("light.diffuse", lightColor * glm::vec3(0.5f));
+      shaderProgram.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+      shaderProgram.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+
+      glBindVertexArray(VAO);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
+    // lightShader.use();
+    // lightShader.setMat4("view", view);
+    // lightShader.setMat4("projection", projection);
+    // lightPos = glm::vec3(2.0f * cos(glfwGetTime() * glm::radians(20.0f)), 1.0f, 2.0f * sin(glfwGetTime() * glm::radians(20.0f)));
+    // glm::mat4 model = glm::mat4(1.0f);
+    // model = glm::translate(model, lightPos);
+    // model = glm::scale(model, glm::vec3(0.2f));
+    // lightShader.setMat4("model", model);
+
+    // lightShader.setVec3("lightColor", lightColor);
+    // glBindVertexArray(lightVAO);
+    // glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
