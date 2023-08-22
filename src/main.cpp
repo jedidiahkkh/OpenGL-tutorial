@@ -17,6 +17,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
+inline glm::vec3 transformVec3(glm::mat4 matrix, glm::vec3 vector, bool translate = true);
+
 int gwidth = 800, gheight = 600;
 
 // float vertices[] = {
@@ -100,7 +102,14 @@ glm::vec3 cubePositions[] = {
 Camera* camera;
 
 // light
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 dirLightDirection = glm::vec3(-0.3f, -1.0f, -0.2f);
+const int NR_POINT_LIGHTS = 4;
+glm::vec3 pointLightPositions[] = {
+  glm::vec3(0.7f,  0.2f,  2.0f),
+  glm::vec3(2.3f, -3.3f, -4.0f),
+  glm::vec3(-4.0f,  2.0f, -12.0f),
+  glm::vec3(0.0f,  0.0f, -3.0f)
+};
 
 // timing
 float deltaTime = 0.0f; // time between frames
@@ -186,7 +195,7 @@ int main() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-  data = stbi_load("assets/matrix.jpg", &width, &height, &nChannels, 0);
+  data = stbi_load("assets/hidden.jpg", &width, &height, &nChannels, 0);
   if (data) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -241,7 +250,7 @@ int main() {
     processInput(window);
 
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.05f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
@@ -257,10 +266,36 @@ int main() {
 
 
     glm::vec3 lightColor = glm::vec3(1.0f);
-    lightPos = glm::vec3(2.0f * cos(glfwGetTime() * glm::radians(20.0f)), 1.0f, 2.0f * sin(glfwGetTime() * glm::radians(20.0f)));
+    // lightPos = glm::vec3(2.0f * cos(glfwGetTime() * glm::radians(20.0f)), 1.0f, 2.0f * sin(glfwGetTime() * glm::radians(20.0f)));
+
+    shaderProgram.use();
+
+    // set light variables
+    // directional light
+    shaderProgram.setVec3("dirLight.ambient", lightColor * glm::vec3(0.1f));
+    shaderProgram.setVec3("dirLight.diffuse", lightColor * glm::vec3(0.5f));
+    shaderProgram.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
+    shaderProgram.setVec3("dirLight.direction", transformVec3(view, dirLightDirection, false));
+    // point lights
+    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+      shaderProgram.setVec3("pointLights[" + std::to_string(i) + "].ambient", lightColor * glm::vec3(0.1f));
+      shaderProgram.setVec3("pointLights[" + std::to_string(i) + "].diffuse", lightColor * glm::vec3(0.5f));
+      shaderProgram.setVec3("pointLights[" + std::to_string(i) + "].specular", 1.0f, 1.0f, 1.0f);
+      shaderProgram.setVec3("pointLights[" + std::to_string(i) + "].position", transformVec3(view, pointLightPositions[i]));
+      shaderProgram.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0f);
+      shaderProgram.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.14f);
+      shaderProgram.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.07f);
+    }
+    // spot light
+    shaderProgram.setVec3("spotLight.ambient", lightColor * glm::vec3(0.0f));
+    shaderProgram.setVec3("spotLight.diffuse", lightColor * glm::vec3(1.0f));
+    shaderProgram.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+    shaderProgram.setVec3("spotLight.position", glm::vec3(0, 0, 0)/* camera->position */);
+    shaderProgram.setVec3("spotLight.direction", glm::vec3(0, 0, -1)/* camera->front */);
+    shaderProgram.setFloat("spotLight.cutOff", glm::cos(glm::radians(8.0f)));
+    shaderProgram.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(10.0f)));
 
     for (unsigned int i = 0; i < 10; i++) {
-      shaderProgram.use();
 
       // set up matrices
       glm::mat4 model = glm::mat4(1.0f);
@@ -278,39 +313,32 @@ int main() {
 
       shaderProgram.setInt("material.diffuse", 0);
       shaderProgram.setInt("material.specular", 1);
-      // shaderProgram.setInt("material.emission", 2);
-      shaderProgram.setFloat("material.shininess", 0.21794872f * 128);
+      shaderProgram.setInt("material.emission", 2);
+      shaderProgram.setFloat("material.shininess", 32);
 
       // lightColor.x = sin(glfwGetTime() * 2.4f);
       // lightColor.y = sin(glfwGetTime() * 0.7f);
       // lightColor.z = sin(glfwGetTime() * 1.3f);
 
-      shaderProgram.setVec3("light.ambient", lightColor * glm::vec3(0.2f));
-      shaderProgram.setVec3("light.diffuse", lightColor * glm::vec3(0.5f));
-      shaderProgram.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-      shaderProgram.setVec3("light.position", camera->position);
-      shaderProgram.setVec3("light.direction", camera->front);
-      shaderProgram.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
-      shaderProgram.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
-      shaderProgram.setFloat("light.constant", 1.0f);
-      shaderProgram.setFloat("light.linear", 0.14f);
-      shaderProgram.setFloat("light.quadratic", 0.07f);
-
       glBindVertexArray(VAO);
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
-    // lightShader.use();
-    // lightShader.setMat4("view", view);
-    // lightShader.setMat4("projection", projection);
-    // glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::translate(model, lightPos);
-    // model = glm::scale(model, glm::vec3(0.2f));
-    // lightShader.setMat4("model", model);
+    lightShader.use();
 
-    // lightShader.setVec3("lightColor", lightColor);
-    // glBindVertexArray(lightVAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
+    for (int i = 0;i < NR_POINT_LIGHTS;i++) {
+      lightShader.setMat4("view", view);
+      lightShader.setMat4("projection", projection);
+      glm::mat4 model = glm::mat4(1.0f);
+      model = glm::translate(model, pointLightPositions[i]);
+      model = glm::scale(model, glm::vec3(0.2f));
+      lightShader.setMat4("model", model);
+
+      lightShader.setVec3("lightColor", lightColor);
+      glBindVertexArray(lightVAO);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -318,6 +346,10 @@ int main() {
 
   glfwTerminate();
   return 0;
+}
+
+inline glm::vec3 transformVec3(glm::mat4 matrix, glm::vec3 vector, bool translate) {
+  return glm::vec3(matrix * glm::vec4(vector.x, vector.y, vector.z, (float)translate));
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
